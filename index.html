@@ -63,7 +63,7 @@
 
   <script>
     let hasVoted = false;
-    let votes = [420, 310, 180, 90];
+    let votes = [0, 0, 0, 0];   // Yes, Mostly, Somewhat, No   ← START FROM ZERO
 
     function renderOptions() {
       const labels = ["Yes, perfectly", "Mostly yes", "Somewhat", "No, not really"];
@@ -118,7 +118,7 @@
       document.getElementById('total-votes').textContent = total;
     }
 
-    // Double-click logo to open Admin
+    // Double-click logo = Admin
     function checkAdminAccess(e) {
       if (e.detail === 2) {
         document.getElementById('admin-modal').classList.remove('hidden');
@@ -135,13 +135,13 @@
     }
 
     function resetVotes() {
-      if (confirm("Reset ALL votes?")) {
+      if (confirm("Reset all votes to zero?")) {
         votes = [0, 0, 0, 0];
         hasVoted = false;
         document.getElementById('vote-btn').classList.remove('hidden');
         document.getElementById('results').classList.add('hidden');
         renderOptions();
-        alert("Votes reset successfully!");
+        alert("Poll has been fully reset. Everyone can vote again!");
       }
     }
 
@@ -151,13 +151,8 @@
       document.getElementById('admin-pass').value = '';
     }
 
-    // Initialize
+    // Start
     renderOptions();
-    if (hasVoted) {
-      document.getElementById('vote-btn').classList.add('hidden');
-      document.getElementById('results').classList.remove('hidden');
-      showResults();
-    }
   </script>
 </body>
 </html>
