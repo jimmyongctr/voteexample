@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StrawPoll Clone</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .option { transition: all 0.2s; }
+    .option:hover { background-color: #f3f4f6; }
+    .bar { transition: width 1.5s ease; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen py-8">
+  <div class="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+    <!-- Header -->
+    <div class="px-8 py-5 border-b flex items-center justify-between bg-white">
+      <div onclick="checkAdminAccess(event)" class="flex items-center gap-3 cursor-pointer">
+        <div class="w-9 h-9 bg-orange-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl">S</div>
+        <div class="font-bold text-2xl">StrawPoll</div>
+      </div>
+      <div class="text-sm text-gray-400">Public Poll</div>
+    </div>
+
+    <!-- Poll -->
+    <div class="p-8">
+      <h1 id="poll-title" class="text-2xl font-bold text-gray-800 leading-tight">
+        Do you understand the examples given by your instructor?
+      </h1>
+      <div class="mt-3 text-sm text-gray-500">Public poll • Live Results</div>
+
+      <div id="options" class="mt-8 space-y-3"></div>
+
+      <button onclick="submitVote()" id="vote-btn"
+              class="mt-8 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-5 rounded-2xl text-xl transition">
+        Vote
+      </button>
+
+      <div id="results" class="hidden mt-8">
+        <div class="text-sm font-medium text-gray-500 mb-4">Live Results • <span id="total-votes">0</span> votes</div>
+        <div id="results-list" class="space-y-5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div id="admin-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-white rounded-3xl w-full max-w-md mx-4 p-8">
+      <h2 class="text-2xl font-bold mb-6">Admin Panel</h2>
+      <input id="admin-pass" type="password" placeholder="Enter admin password" 
+             class="w-full border border-gray-300 rounded-2xl px-5 py-4 mb-4 focus:outline-none">
+      <button onclick="adminLogin()" 
+              class="w-full bg-zinc-800 text-white py-4 rounded-2xl font-medium">Login</button>
+      
+      <div id="admin-panel" class="hidden mt-8 space-y-4">
+        <button onclick="resetVotes()" class="w-full py-4 border border-red-300 text-red-500 rounded-2xl font-medium">Reset All Votes</button>
+        <button onclick="closeAdmin()" class="w-full py-3 text-gray-500">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let hasVoted = false;
+    let votes = [420, 310, 180, 90];
+
+    function renderOptions() {
+      const labels = ["Yes, perfectly", "Mostly yes", "Somewhat", "No, not really"];
+      let html = '';
+      labels.forEach((label, i) => {
+        html += `
+          <div onclick="selectOption(${i})" class="option cursor-pointer border-2 border-transparent hover:border-orange-300 rounded-2xl p-5 flex items-center gap-4 bg-white">
+            <input type="radio" name="option" class="w-5 h-5 accent-orange-500">
+            <span class="flex-1 text-lg font-medium">${label}</span>
+          </div>`;
+      });
+      document.getElementById('options').innerHTML = html;
+    }
+
+    function selectOption(index) {
+      if (hasVoted) return alert("You have already voted in this session!");
+      document.querySelectorAll('input[type="radio"]').forEach((radio, i) => radio.checked = i === index);
+    }
+
+    function submitVote() {
+      if (hasVoted) return alert("You have already voted!");
+      const selected = document.querySelector('input[type="radio"]:checked');
+      if (!selected) return alert("Please select an option first!");
+
+      const index = Array.from(document.querySelectorAll('input[type="radio"]')).indexOf(selected);
+      votes[index]++;
+      hasVoted = true;
+
+      document.getElementById('vote-btn').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+      showResults();
+    }
+
+    function showResults() {
+      const total = votes.reduce((a, b) => a + b, 0);
+      const labels = ["Yes, perfectly", "Mostly yes", "Somewhat", "No, not really"];
+      let html = '';
+      votes.forEach((count, i) => {
+        const percent = total === 0 ? 0 : Math.round((count / total) * 100);
+        html += `
+          <div>
+            <div class="flex justify-between text-sm mb-2">
+              <span>${labels[i]}</span>
+              <span class="font-medium">${percent}% (${count})</span>
+            </div>
+            <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+              <div class="bar h-4 bg-orange-500" style="width: ${percent}%"></div>
+            </div>
+          </div>`;
+      });
+      document.getElementById('results-list').innerHTML = html;
+      document.getElementById('total-votes').textContent = total;
+    }
+
+    // Double-click logo to open Admin
+    function checkAdminAccess(e) {
+      if (e.detail === 2) {
+        document.getElementById('admin-modal').classList.remove('hidden');
+      }
+    }
+
+    function adminLogin() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === "admin123") {
+        document.getElementById('admin-panel').classList.remove('hidden');
+      } else {
+        alert("Wrong password!");
+      }
+    }
+
+    function resetVotes() {
+      if (confirm("Reset ALL votes?")) {
+        votes = [0, 0, 0, 0];
+        hasVoted = false;
+        document.getElementById('vote-btn').classList.remove('hidden');
+        document.getElementById('results').classList.add('hidden');
+        renderOptions();
+        alert("Votes reset successfully!");
+      }
+    }
+
+    function closeAdmin() {
+      document.getElementById('admin-modal').classList.add('hidden');
+      document.getElementById('admin-panel').classList.add('hidden');
+      document.getElementById('admin-pass').value = '';
+    }
+
+    // Initialize
+    renderOptions();
+    if (hasVoted) {
+      document.getElementById('vote-btn').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+      showResults();
+    }
+  </script>
+</body>
+</html>
